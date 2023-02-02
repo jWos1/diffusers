@@ -180,9 +180,9 @@ class CheckpointMergerPipeline(DiffusionPipeline):
         )
         final_pipe.to(self.device)
 
-        checkpoint_path_2 = None
+        cached_folder_2_available = False
         if len(cached_folders) > 2:
-            checkpoint_path_2 = os.path.join(cached_folders[2])
+            cached_folder_2_available = True
 
         if interp == "sigmoid":
             theta_func = CheckpointMergerPipeline.sigmoid
@@ -205,14 +205,18 @@ class CheckpointMergerPipeline(DiffusionPipeline):
                         )
                     )
                     checkpoint_path_1 = files[0] if len(files) > 0 else None
-                if checkpoint_path_2 is not None and os.path.exists(checkpoint_path_2):
-                    files = list(
-                        (
-                            *glob.glob(os.path.join(checkpoint_path_2, "*.safetensors")),
-                            *glob.glob(os.path.join(checkpoint_path_2, "*.bin")),
+                if cached_folder_2_available:
+                    checkpoint_path_2 = os.path.join(cached_folders[2], attr)
+                    if os.path.exists(checkpoint_path_2):
+                        files = list(
+                            (
+                                *glob.glob(os.path.join(checkpoint_path_2, "*.safetensors")),
+                                *glob.glob(os.path.join(checkpoint_path_2, "*.bin")),
+                            )
                         )
-                    )
-                    checkpoint_path_2 = files[0] if len(files) > 0 else None
+                        checkpoint_path_2 = files[0] if len(files) > 0 else None
+                else:
+                    checkpoint_path_2 = None
                 # For an attr if both checkpoint_path_1 and 2 are None, ignore.
                 # If atleast one is present, deal with it according to interp method, of course only if the state_dict keys match.
                 if checkpoint_path_1 is None and checkpoint_path_2 is None:
