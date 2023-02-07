@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional
 
@@ -329,6 +330,25 @@ class DiagonalGaussianDistribution(object):
         )
         x = self.mean + self.std * sample
         return x
+
+    def cpu(self):
+        self.parameters = self.parameters.cpu()
+        self.mean = self.mean.cpu()
+        self.logvar = self.logvar.cpu()
+        self.std = self.std.cpu()
+        self.var = self.var.cpu()
+        return self
+
+    def cuda(self):
+        self.parameters = self.parameters.cuda()
+        self.mean = self.mean.cuda()
+        self.logvar = self.logvar.cuda()
+        self.std = self.std.cuda()
+        self.var = self.var.cuda()
+        return self
+
+    def clone(self):
+        return deepcopy(self)
 
     def kl(self, other=None):
         if self.deterministic:
