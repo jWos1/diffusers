@@ -192,12 +192,15 @@ class StableDiffusionPipeline(DiffusionPipeline):
             raise ImportError("Please install accelerate via `pip install accelerate`")
 
         device = torch.device(f"cuda:{gpu_id}")
-
+        # Reverted the change https://github.com/huggingface/diffusers/pull/1968/files#diff-ab952f41078da66b9fcbbd913b419f8c334badceefac03a5f7edcd6dd986a8ef
         for cpu_offloaded_model in [self.unet, self.text_encoder, self.vae]:
-            cpu_offload(cpu_offloaded_model, device)
+            # cpu_offload(cpu_offloaded_model, device)
+            if cpu_offloaded_model is not None:
+                cpu_offload(cpu_offloaded_model, device)
 
         if self.safety_checker is not None:
-            cpu_offload(self.safety_checker, execution_device=device, offload_buffers=True)
+            # cpu_offload(self.safety_checker, execution_device=device, offload_buffers=True)
+            cpu_offload(self.safety_checker.vision_model, device)
 
     @property
     def _execution_device(self):
